@@ -1,12 +1,16 @@
-{% extends 'home.html' %}
+{% comment %} {% extends 'home.html' %} {% endcomment %}
 {% block body %}
 <link rel="stylesheet" href="//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
-
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <div  class="container-fluid">
-    <h2 style="color:red;margin-top:4%">Employee List
-        <a href="{% url 'create_employee' %}"><button class="btn btn-primary" align="right" style="float:right">Create</button></a>
-    </h2>
-    <table class="table table-bordered" id="myTable">
+   <h1 class="title ml-96" style="font-family: 'Comic Sans MS', cursive; color: black; text-shadow: 2px 2px 4px #000000; display: block; margin: 0 auto;">Employee List</h1>
+   <button type="button" class="btn btn-info btn-lg text-black" data-toggle="modal" data-target="#myModal" align="right" style="float:right; margin-bottom:40px; margin-left: 10px; color:black">Assign task</button></h1>
+   <a href="{% url 'create_employee' %}"><button type="button" class="btn btn-info btn-lg text-black" data-toggle="modal" data-target="#myModal" align="right" style="float:right; margin-bottom:40px; color:black;">Add Employee</button></a></h1>
+   <table class="table table-striped table-bordered" id="myTable" style="width:100%">
         <thead>
             <tr>
                 <th>Name</th>
@@ -18,10 +22,12 @@
                 <th>State</th>
                 <th>Country</th>
                 <th>Zipcode</th>
-                <th>No of leave</th>
                 <th>Leave/Working</th>
                 <th>Status</th>
                 <th>Action</th>
+                <th>Tasks</th>
+
+
             </tr>
         </thead>
         <tbody>
@@ -36,7 +42,6 @@
                 <td>{{i.state}}</td>
                 <td>{{i.country}}</td>
                 <td>{{i.zipcode}}</td>
-                <td>{{i.leave_count}}</td>
                 <td>{% if i.on_leave %}
                     <a href="{% url 'leave_status' i.id %}" onclick="return confirm('Are you sure, You are working today?')"><button class="btn btn-danger">Leave</button></a>
                     {% else %}
@@ -46,6 +51,9 @@
                 <td><a href="{% url 'edit_employee' i.id %}" ><button class="btn btn-success">Edit</button></a>
                     <a href="{% url 'delete_employee' i.id %}" onclick="return confirm('Are you sure?')"><button class="btn btn-danger">delete</button></a>
                 </td>
+                <td><a href="{% url 'task-list' i.id %}" ><i class="fa fa-eye" style="font-size:24px;color:#5bc0de"></i></a>
+                </td>
+                
             </tr>
             {% endfor %}
         </tbody>
@@ -69,8 +77,89 @@
       {% endif %}
   </span>
 </div>
+<div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Add Task</h4>
+            </div>
+            <form id="myForm" method="post" action="{% url 'add-task' %}" enctype="multipart/form-data">
+                {% csrf_token %}
 
-<script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+                <div class="modal-body" id="task-container">
+                    <div class="form-group task">
+                        <label for="title">Title</label>
+                        <input type="text" class="form-control" name="title[]" required placeholder="Enter Title">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" name="description[]" rows="3" placeholder="Enter Description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" class="form-control" name="date[]" placeholder="Enter Date">
+                    </div>
+                    <div class="form-group">
+                        <label for="assignee">Assignee</label>
+                        <select class="form-control" name="assignee[]">
+                            {% for employee in employees %}
+                            <option value="{{ employee.id }}">{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="add-task">+</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<br>
+<a href="{% url 'home' %}" class="btn btn-default back-btn">Back</a>
+
+<script>
+    $(document).ready(function() {
+        $("#add-task").click(function() {
+            var taskHtml = `
+                <div class="task-container">
+                    <div class="form-group task">
+                        <label for="title">Title</label>
+                        <input type="text" class="form-control" name="title[]" required placeholder="Enter Title">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" name="description[]" rows="3" placeholder="Enter Description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" class="form-control" name="date[]" placeholder="Enter Date">
+                    </div>
+                    <div class="form-group">
+                        <label for="assignee">Assignee</label>
+                        <select class="form-control" name="assignee[]">
+                            {% for employee in employees %}
+                            <option value="{{ employee.id }}">{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-danger remove-task">Remove</button>
+                </div>
+            `;
+            $("#task-container").append(taskHtml);
+        });
+
+        // Event handler for removing tasks
+        $(document).on('click', '.remove-task', function() {
+            $(this).closest('.task-container').remove();
+        });
+    });
+</script>
+
+
 <script>
 $(document).ready(function() {
     $('#myTable').DataTable();

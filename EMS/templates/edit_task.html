@@ -1,0 +1,41 @@
+{% extends 'home.html' %}
+{% block body %}
+
+<div class="container">
+  <div class="card-header text-center">
+
+    <h1 class="title ml-96" style="font-family: 'Comic Sans MS', cursive; color: black; text-shadow: 2px 2px 4px #000000; display: block; margin: 0 auto;">EDIT TASK </h1>
+  </div>
+
+<form method="post" action="" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+    <div class="form-group col-md-6">
+      <label for="inputEmail4">Title</label>
+      <input type="text" class="form-control"  name="title" id="inputEmail4" value="{{task_data.title}}" required placeholder="Enter Title">
+    </div>
+    <div class="form-group col-md-6">
+      <label for="inputPassword4">Description</label>
+      <input type="text" class="form-control" name="description" id="inputPassword4" value="{{task_data.description}}" required placeholder="Description">
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="form-group col-md-6">
+      <label for="assigneeSelect">Assignee</label>
+      <select class="form-select" id="assigneeSelect" name="assignee" required>
+        {% for assignee in assignee_options %}
+          <option value="{{ assignee.id }}" {% if task_data.assignee.id == assignee.id %} selected {% endif %}>{{ assignee.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+   
+    </div>
+    <div class="text-right">
+      <button type="submit" class="btn btn-primary" style="background-color: black;font:white;margin-top:24px">Submit</button>
+  </div>
+</form>
+
+</div>
+
+{% endblock  %}

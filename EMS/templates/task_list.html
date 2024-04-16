@@ -1,0 +1,221 @@
+{% block body %}
+<link
+  rel="stylesheet"
+  href="//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+/>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+<!-- Add your custom styles here -->
+<style>
+  /* Move your custom styles here */
+  .header {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .back-btn {
+    margin-top: 10px;
+  }
+</style>
+<div class="container-fluid">
+  <div class="header">
+    <div class="row">
+      <div class="col-sm-6">
+        <h1
+          class="title ml-96"
+          style="
+            font-family: 'Comic Sans MS', cursive;
+            color: #5bc0de;
+            text-shadow: 2px 2px 4px #000000;
+            display: block;
+            margin: 0 auto;
+          "
+        >
+          Task List
+        </h1>
+      </div>
+      <div class="col-sm-12 text-right">
+        <button
+          type="button"
+          class="btn btn-info btn-lg"
+          data-toggle="modal"
+          data-target="#myModal"
+          style="color: black"
+        >
+          Add Task
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <table class="table table-bordered" id="myTable">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Assigned Date</th>
+        <th>Created At</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for task in tasks %}
+      <tr>
+        <td>{{ task.title }}</td>
+        <td>{{ task.description }}</td>
+        <td>{{ task.date }}</td>
+        <td>{{ task.created_at }}</td>
+        <td>
+          <a href="{% url 'edit_task' task.id %}" class="btn btn-success"
+            >Edit</a
+          >
+          <a
+            href="{% url 'task-delete' task.id %}"
+            onclick="return confirm('Are you sure?')"
+            class="btn btn-danger"
+            >Delete</a
+          >
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="pagination">
+  <span class="step-links">
+    {% if tasks.has_previous %}
+    <a href="?page=1">&laquo; First</a>
+    <a href="?page={{ tasks.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span class="current">
+      Page {{ tasks.number }} of {{ tasks.paginator.num_pages }}.
+    </span>
+
+    {% if tasks.has_next %}
+    <a href="?page={{ tasks.next_page_number }}">Next</a>
+    <a href="?page={{ tasks.paginator.num_pages }}">Last &raquo;</a>
+    {% endif %}
+  </span>
+</div>
+
+<div class="modal fade" id="myModal" role="dialog">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">
+          &times;
+        </button>
+        <h4 class="modal-title">Add Task</h4>
+      </div>
+      <form
+        id="myForm"
+        method="post"
+        action="{% url 'add-task' %}"
+        enctype="multipart/form-data"
+      >
+        {% csrf_token %}
+
+        <div class="modal-body" id="task-container">
+          <div class="form-group task">
+            <label for="title">Title</label>
+            <input
+              type="text"
+              class="form-control"
+              name="title[]"
+              required
+              placeholder="Enter Title"
+            />
+          </div>
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea
+              class="form-control"
+              name="description[]"
+              rows="3"
+              placeholder="Enter Description"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="date">Date</label>
+            <input
+              type="date"
+              class="form-control"
+              name="date[]"
+              placeholder="Enter Date"
+            />
+          </div>
+          <div class="form-group">
+            <label for="assignee">Assignee</label>
+            <select class="form-control" name="assignee[]">
+              {% for employee in emp_data %}
+              <option value="{{ employee.id }}">{{ employee.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">
+            Close
+          </button>
+          <button type="button" class="btn btn-primary" id="add-task">+</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<br />
+
+<a href="{% url 'employee-list' %}" class="btn btn-default back-btn">Back</a>
+<script>
+  $(document).ready(function () {
+    $("#add-task").click(function () {
+      var taskHtml = `
+                <div class="task-container">
+                    <div class="form-group task">
+                        <label for="title">Title</label>
+                        <input type="text" class="form-control" name="title[]" required placeholder="Enter Title">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" name="description[]" rows="3" placeholder="Enter Description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" class="form-control" name="date[]" placeholder="Enter Date">
+                    </div>
+                    <div class="form-group">
+                        <label for="assignee">Assignee</label>
+                        <select class="form-control" name="assignee[]">
+                            {% for employee in employees %}
+                            <option value="{{ employee.id }}">{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-danger remove-task">Remove</button>
+                </div>
+            `;
+      $("#task-container").append(taskHtml);
+    });
+
+    // Event handler for removing tasks
+    $(document).on("click", ".remove-task", function () {
+      $(this).closest(".task-container").remove();
+    });
+  });
+</script>
+<script>
+  $(document).ready(function () {
+    $("#myTable").DataTable();
+  });
+</script>
+{% endblock %}
